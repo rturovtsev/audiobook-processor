@@ -134,7 +134,8 @@ func getMP3Files(inputDir string) ([]AudioFile, error) {
 }
 
 func extractIndex(filename string) (int, error) {
-	re := regexp.MustCompile(`^\d+`)
+	// Try to find numbers in the filename, not just at the beginning
+	re := regexp.MustCompile(`\d+`)
 	match := re.FindString(filename)
 
 	if match == "" {
@@ -249,9 +250,13 @@ func createChaptersFile(files []AudioFile, author, title string) (string, error)
 		return "", err
 	}
 
-	// Write global metadata
+	// Write global metadata with additional Plex-friendly tags
 	if title != "" {
 		_, err = file.WriteString(fmt.Sprintf("title=%s\n", title))
+		if err != nil {
+			return "", err
+		}
+		_, err = file.WriteString(fmt.Sprintf("album=%s\n", title))
 		if err != nil {
 			return "", err
 		}
@@ -262,6 +267,20 @@ func createChaptersFile(files []AudioFile, author, title string) (string, error)
 		if err != nil {
 			return "", err
 		}
+		_, err = file.WriteString(fmt.Sprintf("album_artist=%s\n", author))
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// Add audiobook-specific metadata
+	_, err = file.WriteString("genre=Audiobook\n")
+	if err != nil {
+		return "", err
+	}
+	_, err = file.WriteString("media_type=audiobook\n")
+	if err != nil {
+		return "", err
 	}
 
 	_, err = file.WriteString("\n")
@@ -308,6 +327,45 @@ func createChaptersFile(files []AudioFile, author, title string) (string, error)
 	return chaptersFile, nil
 }
 
+func createSimpleChaptersFile(files []AudioFile) (string, error) {
+	if len(files) == 0 {
+		return "", fmt.Errorf("no files provided")
+	}
+
+	// Create simple chapters file for Plex compatibility
+	chaptersFile := filepath.Join(filepath.Dir(files[0].Path), "chapters_simple.txt")
+	
+	file, err := os.Create(chaptersFile)
+	if err != nil {
+		return "", fmt.Errorf("error creating simple chapters file: %v", err)
+	}
+	defer file.Close()
+
+	// Generate chapters in simple format
+	var currentTime float64 = 0
+
+	for i, audioFile := range files {
+		hours := int(currentTime / 3600)
+		minutes := int((currentTime - float64(hours*3600)) / 60)
+		seconds := currentTime - float64(hours*3600) - float64(minutes*60)
+
+		// Write chapter in HH:MM:SS.sss format
+		_, err = file.WriteString(fmt.Sprintf("CHAPTER%02d=%02d:%02d:%06.3f\n", i+1, hours, minutes, seconds))
+		if err != nil {
+			return "", err
+		}
+
+		_, err = file.WriteString(fmt.Sprintf("CHAPTER%02dNAME=%s\n", i+1, audioFile.Title))
+		if err != nil {
+			return "", err
+		}
+
+		currentTime += audioFile.Duration
+	}
+
+	return chaptersFile, nil
+}
+
 func updateMetaTags(files []AudioFile, author, title *string) error {
 	totalFiles := len(files)
 	for i, file := range files {
@@ -317,26 +375,29 @@ func updateMetaTags(files []AudioFile, author, title *string) error {
 		}
 		defer tag.Close()
 
+		// Use UTF-8 encoding for proper cyrillic support
+		utf8Encoding := id3v2.EncodingUTF8
+
 		// Очистка существующего исполнителя альбома
 		tag.DeleteFrames("TPE2")
 
 		// Установка номера трека в формате "номер/общее количество"
 		trackNum := fmt.Sprintf("%d/%d", i+1, totalFiles)
-		tag.AddTextFrame("TRCK", tag.DefaultEncoding(), trackNum)
+		tag.AddTextFrame("TRCK", utf8Encoding, trackNum)
 
 		// Установка номера диска на 1
-		tag.AddTextFrame("TPOS", tag.DefaultEncoding(), "1")
+		tag.AddTextFrame("TPOS", utf8Encoding, "1")
 
 		// Удаление комментариев (заметок)
 		tag.DeleteFrames("COMM")
 
 		// Установка имени автора и названия альбома, если предоставлены
 		if author != nil && *author != "" {
-			tag.AddTextFrame("TPE1", tag.DefaultEncoding(), *author)
+			tag.AddTextFrame("TPE1", utf8Encoding, *author)
 		}
 
 		if title != nil && *title != "" {
-			tag.AddTextFrame("TALB", tag.DefaultEncoding(), *title)
+			tag.AddTextFrame("TALB", utf8Encoding, *title)
 		}
 
 		// Сохранение изменений в файле
@@ -360,6 +421,13 @@ func mergeFilesToM4B(files []AudioFile, author, title string) error {
 	}
 	defer os.Remove(chaptersFile) // Clean up temporary file
 
+	// Also create a simple chapters file for better Plex compatibility
+	simpleChaptersFile, err := createSimpleChaptersFile(files)
+	if err != nil {
+		return fmt.Errorf("error creating simple chapters file: %v", err)
+	}
+	defer os.Remove(simpleChaptersFile) // Clean up temporary file
+
 	var args []string
 	
 	// Add input files
@@ -381,15 +449,29 @@ func mergeFilesToM4B(files []AudioFile, author, title string) error {
 		outputFile = filepath.Join(outputDir, "audiobook.m4b")
 	}
 
+	// Create filter_complex for concatenation
+	var filterComplex strings.Builder
+	for i := 0; i < len(files); i++ {
+		if i > 0 {
+			filterComplex.WriteString(" ")
+		}
+		filterComplex.WriteString(fmt.Sprintf("[%d:a]", i))
+	}
+	filterComplex.WriteString(fmt.Sprintf(" concat=n=%d:v=0:a=1 [out]", len(files)))
+
 	// FFmpeg arguments for M4B conversion with chapters
 	args = append(args, 
+		"-filter_complex", filterComplex.String(),
+		"-map", "[out]",
 		"-map_metadata", fmt.Sprintf("%d", len(files)), // Map metadata from chapters file
 		"-c:a", "aac",    // Use AAC codec
-		"-vn",           // No video
-		"-ar", "44100",  // Sample rate
-		"-b:a", "128k",  // Audio bitrate
-		"-f", "mp4",     // Output format
-		"-y",            // Overwrite output file
+		"-b:a", "128k",   // Audio bitrate
+		"-ar", "44100",   // Sample rate
+		"-f", "mp4",      // Output format
+		"-brand", "M4B ", // Explicit M4B brand for better compatibility
+		"-movflags", "+faststart", // Optimize for streaming
+		"-metadata", "media_type=audiobook", // Mark as audiobook
+		"-y",             // Overwrite output file
 		outputFile)
 
 	fmt.Printf("Creating M4B file with chapters: %s\n", outputFile)
