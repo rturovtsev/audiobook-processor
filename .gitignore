@@ -1,1 +1,13 @@
 .idea
+
+# Claude Code files
+CLAUDE.md
+task.md
+
+# Build artifacts
+audiobook-processor
+audiobook-processor.exe
+audiobook-processor-*
+
+# Temporary files
+chapters.txt
