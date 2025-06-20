@@ -197,46 +197,6 @@ ffmpeg -version
 - Убедитесь, что система поддерживает UTF-8
 - Проверьте кодировку ID3 тегов в исходных файлах
 
-## Совместимость
-
-### Протестировано с
-- **Операционные системы**: Windows 10/11, macOS 12+, Ubuntu 20.04+
-- **Медиасерверы**: Plex Media Server, Jellyfin
-- **Плееры**: VLC, iTunes, Apple Books, Google Play Books
-
-### Известные ограничения
-- Поддерживает только MP3 входные файлы
-- Требует числовой префикс в именах файлов
-- Максимальное количество файлов ограничено системными ресурсами
-
-## Разработка
-
-### Структура проекта
-```
-audiobook-processor/
-├── main.go              # Основной исполняемый файл
-├── go.mod               # Зависимости Go
-├── go.sum               # Контрольные суммы
-├── README.md            # Документация
-├── CLAUDE.md            # Инструкции для Claude Code
-└── task.md              # Техническое задание
-```
-
-### Зависимости Go
-- `github.com/bogem/id3v2/v2` - Работа с ID3v2 тегами
-
-### Сборка для разных платформ
-```bash
-# Windows
-GOOS=windows GOARCH=amd64 go build -o audiobook-processor.exe main.go
-
-# macOS
-GOOS=darwin GOARCH=amd64 go build -o audiobook-processor-macos main.go
-
-# Linux
-GOOS=linux GOARCH=amd64 go build -o audiobook-processor-linux main.go
-```
-
 ## Лицензия
 
 Этот проект распространяется под лицензией MIT. См. файл LICENSE для подробностей.
@@ -248,7 +208,3 @@ GOOS=linux GOARCH=amd64 go build -o audiobook-processor-linux main.go
 1. Проверьте раздел "Решение проблем" выше
 2. Создайте issue в репозитории GitHub
 3. Приложите подробное описание проблемы и логи
-
----
-
-**Примечание**: Программа создана для личного использования и обработки легально приобретенных аудиокниг. Соблюдайте авторские права при использовании.
