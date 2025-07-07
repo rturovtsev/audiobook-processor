@@ -1,4 +1,4 @@
-name: Release
+name: Build and Release
 
 on:
   release:
@@ -9,59 +9,52 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            asset_name: audiobook-processor-linux-amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            asset_name: audiobook-processor-linux-arm64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            asset_name: audiobook-processor-windows-amd64.exe
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            asset_name: audiobook-processor-macos-amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            asset_name: audiobook-processor-macos-arm64
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Check out the code
+      uses: actions/checkout@v3
 
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.23'
 
-    - name: Build for Linux amd64
+    - name: Build the executable
       env:
-        GOOS: linux
-        GOARCH: amd64
-      run: go build -ldflags="-s -w" -o audiobook-processor-linux-amd64 main.go
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: go build -ldflags="-s -w" -o ${{ matrix.asset_name }} main.go
 
-    - name: Build for Linux arm64
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1
       env:
-        GOOS: linux
-        GOARCH: arm64
-      run: go build -ldflags="-s -w" -o audiobook-processor-linux-arm64 main.go
-
-    - name: Build for Windows amd64
-      env:
-        GOOS: windows
-        GOARCH: amd64
-      run: go build -ldflags="-s -w" -o audiobook-processor-windows-amd64.exe main.go
-
-    - name: Build for Windows arm64
-      env:
-        GOOS: windows
-        GOARCH: arm64
-      run: go build -ldflags="-s -w" -o audiobook-processor-windows-arm64.exe main.go
-
-    - name: Build for macOS amd64
-      env:
-        GOOS: darwin
-        GOARCH: amd64
-      run: go build -ldflags="-s -w" -o audiobook-processor-macos-amd64 main.go
-
-    - name: Build for macOS arm64
-      env:
-        GOOS: darwin
-        GOARCH: arm64
-      run: go build -ldflags="-s -w" -o audiobook-processor-macos-arm64 main.go
-
-    - name: Upload Release Assets
-      uses: softprops/action-gh-release@v1
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        files: |
-          audiobook-processor-linux-amd64
-          audiobook-processor-linux-arm64
-          audiobook-processor-windows-amd64.exe
-          audiobook-processor-windows-arm64.exe
-          audiobook-processor-macos-amd64
-          audiobook-processor-macos-arm64
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./${{ matrix.asset_name }}
+        asset_name: ${{ matrix.asset_name }}
+        asset_content_type: application/octet-stream
