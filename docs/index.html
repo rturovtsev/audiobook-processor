@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audiobook Processor - Обработка аудиокниг</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 6rem 0;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .features {
+            padding: 6rem 0;
+            background: white;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .how-it-works {
+            padding: 6rem 0;
+            background: #f8f9fa;
+        }
+
+        .how-it-works h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .step {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+        }
+
+        .download {
+            padding: 6rem 0;
+            background: white;
+            text-align: center;
+        }
+
+        .download h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .download p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #666;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .download-btn {
+            background: #667eea;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .download-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .code-example {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .code-example pre {
+            margin: 0;
+            font-family: 'Fira Code', 'Consolas', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">🎧 Audiobook Processor</div>
+            <ul class="nav-links">
+                <li><a href="#features">Возможности</a></li>
+                <li><a href="#how-it-works">Как работает</a></li>
+                <li><a href="#download">Скачать</a></li>
+                <li><a href="https://github.com/rturovtsev/audiobook-processor" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Audiobook Processor</h1>
+            <p>Профессиональная обработка и конвертация MP3 аудиокниг в формат M4B с автоматическим созданием оглавления</p>
+            <div class="cta-buttons">
+                <a href="#download" class="btn btn-primary">Скачать сейчас</a>
+                <a href="https://github.com/rturovtsev/audiobook-processor" target="_blank" class="btn btn-secondary">Посмотреть на GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2>Возможности программы</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Автоматическая обработка</h3>
+                    <p>Переименование и сортировка MP3 файлов с сохранением правильного порядка</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏷️</div>
+                    <h3>Обновление метатегов</h3>
+                    <p>Корректировка ID3v2 тегов для оптимальной совместимости с медиасерверами</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📖</div>
+                    <h3>Создание оглавления</h3>
+                    <p>Автоматическая генерация глав с точными временными метками</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎵</div>
+                    <h3>Конвертация в M4B</h3>
+                    <p>Объединение файлов в единый аудиокнижный формат высокого качества</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Совместимость с Plex</h3>
+                    <p>Оптимизация метаданных для идеальной работы с медиасерверами</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Быстрая обработка</h3>
+                    <p>Эффективная обработка больших коллекций аудиофайлов</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2>Как это работает</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Анализ файлов</h3>
+                    <p>Сканирование папки с MP3 файлами и автоматическое переименование</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Обработка метаданных</h3>
+                    <p>Обновление ID3v2 тегов и добавление информации о книге</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Создание глав</h3>
+                    <p>Генерация оглавления с временными метками для каждой главы</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Конвертация</h3>
+                    <p>Объединение файлов в M4B формат с встроенным оглавлением</p>
+                </div>
+            </div>
+            
+            <div class="code-example">
+                <pre><code># Базовое использование
+./audiobook-processor --input /path/to/mp3/files
+
+# С указанием метаданных
+./audiobook-processor \
+  --input "/path/to/audiobook/files" \
+  --author "Александр Пушкин" \
+  --title "Евгений Онегин"</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <section id="download" class="download">
+        <div class="container">
+            <h2>Скачать Audiobook Processor</h2>
+            <p>Выберите версию для вашей операционной системы</p>
+            <div class="download-buttons">
+                <a href="https://github.com/rturovtsev/audiobook-processor/releases/latest/download/audiobook-processor-windows-amd64.exe" class="download-btn">
+                    🪟 Windows (64-bit)
+                </a>
+                <a href="https://github.com/rturovtsev/audiobook-processor/releases/latest/download/audiobook-processor-macos-amd64" class="download-btn">
+                    🍎 macOS (Intel)
+                </a>
+                <a href="https://github.com/rturovtsev/audiobook-processor/releases/latest/download/audiobook-processor-macos-arm64" class="download-btn">
+                    🍎 macOS (Apple Silicon)
+                </a>
+                <a href="https://github.com/rturovtsev/audiobook-processor/releases/latest/download/audiobook-processor-linux-amd64" class="download-btn">
+                    🐧 Linux (64-bit)
+                </a>
+            </div>
+            <p style="margin-top: 2rem; color: #666;">
+                <strong>Требования:</strong> FFmpeg должен быть установлен и доступен в PATH
+            </p>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Audiobook Processor. Создано с ❤️ для любителей аудиокниг.</p>
+            <p>Исходный код доступен на <a href="https://github.com/rturovtsev/audiobook-processor" target="_blank" style="color: #667eea;">GitHub</a></p>
+        </div>
+    </footer>
+</body>
+</html>
