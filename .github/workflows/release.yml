@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            artifact_name: audiobook-processor-linux-amd64
+            asset_name: audiobook-processor-linux-amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            artifact_name: audiobook-processor-linux-arm64
+            asset_name: audiobook-processor-linux-arm64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            artifact_name: audiobook-processor-windows-amd64.exe
+            asset_name: audiobook-processor-windows-amd64.exe
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            artifact_name: audiobook-processor-windows-arm64.exe
+            asset_name: audiobook-processor-windows-arm64.exe
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            artifact_name: audiobook-processor-macos-amd64
+            asset_name: audiobook-processor-macos-amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            artifact_name: audiobook-processor-macos-arm64
+            asset_name: audiobook-processor-macos-arm64
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+
+    - name: Build
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: go build -ldflags="-s -w" -o ${{ matrix.artifact_name }} main.go
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./${{ matrix.artifact_name }}
+        asset_name: ${{ matrix.asset_name }}
+        asset_content_type: application/octet-stream
